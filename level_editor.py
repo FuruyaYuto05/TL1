@@ -13,7 +13,6 @@ bl_info = {
     "category": "Object",
 }
 
-
 #アドオン有効化時コールバック
 def register():
     #クラスを登録
@@ -41,7 +40,8 @@ def draw_menu_manual(self, context):
     #context : カーソルを合わせたときのポップアップのカスタマイズなどに使用
     #トップバーの「エディターメニュー」に項目（オペレーター）を追加
     self.layout.operator("wm.url_open", text="Manual",icon='HELP')
-    
+
+
 class TOPBAR_MT_my_menu(bpy.types.Menu):
     bl_idname = "TOPBAR_MT_my_menu"
     bl_label = "My Menu"
@@ -52,13 +52,51 @@ class TOPBAR_MT_my_menu(bpy.types.Menu):
        #トップバーの「エディターメニュー」に項目（オペレーター）を追加
        self.layout.operator("wm.url_open_preset", text="Manual", icon='HELP')
 
+       self.layout.operator(MYADDON_OT_stretch_vertex.bl_idname, text=MYADDON_OT_stretch_vertex.bl_label)
+
+       self.layout.operator(MYADDON_OT_create_ico_sphere.bl_idname, text=MYADDON_OT_create_ico_sphere.bl_label)
+
     #既存のメニューにサブメニュー追加
     def submenu(self, context):
        #ID名を指定して、サブメニューを追加
        self.layout.menu(TOPBAR_MT_my_menu.bl_idname)
 
+class MYADDON_OT_stretch_vertex(bpy.types.Operator):
+    bl_idname = "myaddon.myaddon_ot_stretch_vertex"
+    bl_label = "頂点を伸ばす"
+    bl_description = "頂点座標を引っ張って伸ばします"
+    #リドゥ、アンドゥ可能オプション
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #メニューを実行したときに呼ばれるコールバック関数
+    def execute(self, context):
+        bpy.data.objects["Cube"].data.vertices[0].co.x += 1.0
+        print("頂点を伸ばしました")
+        
+        #オペレーターが頂点命令終了を通知
+        return {'FINISHED'} 
+
+class MYADDON_OT_create_ico_sphere(bpy.types.Operator):
+    bl_idname = "myaddon.myaddon_ot_create_object"
+    bl_label = "ico sphereを作成"
+    bl_description = "ico sphereを作成します"
+    #リドゥ、アンドゥ可能オプション
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #メニューを実行したときに呼ばれるコールバック関数
+    def execute(self, context):
+        bpy.ops.mesh.primitive_ico_sphere_add()
+        print("ico sphereを作成しました")
+        
+        #オペレーターが頂点命令終了を通知
+        return {'FINISHED'} 
+
+
+
 #Blemderに登録するクラスリスト
 classes = (
+    MYADDON_OT_stretch_vertex,
+    MYADDON_OT_create_ico_sphere,
     TOPBAR_MT_my_menu,
 )
 
