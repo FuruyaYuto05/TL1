@@ -81,7 +81,7 @@ class MYADDON_OT_export_scene(bpy.types.Operator,bpy_extras.io_utils.ExportHelpe
             self.write_and_print(file, indent + "N %s" % object["file_name"])
         #カスタムプロパティ'collision
         if"collider" in object:
-            self.write_add_print(file, indent + "C %s" % object["collider"])
+            self.write_and_print(file, indent + "C %s" % object["collider"])
             temp_str = indent + "CC %f %f %f"
             temp_str %= (object["collider_center"][0],object["collider_center"][1],object["collider_center"][2])
             self.write_and_print(file,temp_str)
@@ -385,7 +385,7 @@ def unregister():
     #メニューから項目を削除
     bpy.types.TOPBAR_MT_editor_menus.remove(TOPBAR_MT_my_menu.submenu)
 
-    #3Dビューから描画関数を削除    if DrawCollider.handle is not None:
+    #3Dビューから描画関数を削除    
     bpy.types.SpaceView3D.draw_handler_remove(DrawCollider.handle, 'WINDOW')
 
     # Blenderからクラスを削除
