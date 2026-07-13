@@ -88,7 +88,7 @@ class MYADDON_OT_export_scene(bpy.types.Operator,bpy_extras.io_utils.ExportHelpe
         transform["rotation"] = (rot.x, rot.y, rot.z)
         transform["scaling"] = (scale.x, scale.y, scale.z)
         #まとめて1個分のjsonオブジェクトに登録
-        json_object["transoform"] = transform
+        json_object["transform"] = transform
         #カスタムプロパティ'file_name'
         if "file_name" in object:
             json_object["file_name"] = object["file_name"]
@@ -277,11 +277,10 @@ class OBJECT_PT_file_name(bpy.types.Panel):
     def draw(self, context):
         if "file_name" in context.object:
             #すでにプロパティがあれば、プロパティを表示
-            
-            self.layout.operator(MYADDON_OT_add_collider.bl_idname)
+            self.layout.prop(context.object, '["file_name"]', text=self.bl_label)
         else:
             #プロパティがなければ、プロパティを追加ボタンを表示
-            self.layout.operator(MYADDON_OT_add_filename.bl_idname)   
+            self.layout.operator(MYADDON_OT_add_filename.bl_idname)
         
         
         #self.layout.operator(MYADDON_OT_stretch_vertex.bl_idname,text=MYADDON_OT_stretch_vertex.bl_label)
@@ -342,8 +341,6 @@ class OBJECT_PT_collider(bpy.types.Panel):
         else:
             #プロパティがなければ、プロパティ追加ボタン表示
             self.layout.operator(MYADDON_OT_add_collider.bl_idname)
-
-
 
 
 #コライダー描画
