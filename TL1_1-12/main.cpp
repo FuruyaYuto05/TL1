@@ -557,7 +557,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::vector<Object3d*> levelObjects;
 
 	// レベルデータ読み込み
-	LevelData* levelData = LoadLevelData("test");
+	LevelData* levelData = LoadLevelData("blenderTest");
 
 	// JSONのデータを元にObject3dを作る
 	for (const LevelData::ObjectData& objectData : levelData->objects) {

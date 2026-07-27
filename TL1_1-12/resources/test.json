@@ -2,28 +2,6 @@
     "name": "scene",
     "objects": [
         {
-            "type": "MESH",
-            "name": "terrain",
-            "transform": {
-                "translation": [
-                    0.16080093383789062,
-                    11.869257926940918,
-                    -1.328484058380127
-                ],
-                "rotation": [
-                    0.0,
-                    -0.0,
-                    0.0
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            },
-            "file_name": "terrain.obj"
-        },
-        {
             "type": "LIGHT",
             "name": "Light",
             "transform": {
@@ -67,15 +45,37 @@
         },
         {
             "type": "MESH",
-            "name": "axis",
+            "name": "terarian",
             "transform": {
                 "translation": [
-                    -0.3272671699523926,
-                    -1.8115029335021973,
+                    0.0,
+                    0.0,
                     0.0
                 ],
                 "rotation": [
                     0.0,
+                    -0.0,
+                    0.0
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "file_name": "terrain.obj"
+        },
+        {
+            "type": "MESH",
+            "name": "axis",
+            "transform": {
+                "translation": [
+                    0.0,
+                    0.0,
+                    1.1396499872207642
+                ],
+                "rotation": [
+                    90.00000762939453,
                     -0.0,
                     0.0
                 ],
