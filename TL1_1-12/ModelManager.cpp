@@ -38,6 +38,15 @@ void ModelManager::LoadModel(const std::string& filePath) {
     models.insert(std::make_pair(filePath, std::move(model)));
 }
 
+void ModelManager::ReloadModel(const std::string& filePath) {
+    if (!models.contains(filePath)) {
+        LoadModel(filePath);
+        return;
+    }
+
+    models.at(filePath)->Reload("resources", filePath);
+}
+
 // モデルの検索
 Model* ModelManager::FindModel(const std::string& filePath) {
     // コンテナ内に指定したパスのモデルがあればそのポインタを返す

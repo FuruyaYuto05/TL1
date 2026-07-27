@@ -16,6 +16,9 @@ public:
     // モデルのロード（すでに読み込み済みならそれを返す）
     void LoadModel(const std::string& filePath);
 
+    // 読み込み済みOBJの頂点データを更新する
+    void ReloadModel(const std::string& filePath);
+
     // モデルの検索
     Model* FindModel(const std::string& filePath);
 

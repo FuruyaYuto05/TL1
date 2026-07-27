@@ -14,6 +14,8 @@
 #include <dxcapi.h>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
+#include <map>
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
@@ -543,7 +545,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 2体目のオブジェクト（右側）
 	Object3d* object3d_2 = new Object3d();
 	object3d_2->Initialize(object3dCommon);
-	object3d_2->SetModel("axis.obj"); // 同じモデルデータを使い回す！
+	object3d_2->SetModel(","); // 同じモデルデータを使い回す！
 	object3d_2->SetTranslate({ 2.0f, 0.0f, 0.0f }); // 少し右にずらす
 	object3d_2->SetRotate({ 0.0f, 0.0f, 0.0f });
 
@@ -555,48 +557,69 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	terrainObj->SetRotate({ 0.0f, 0.0f, 0.0f });
 
 	std::vector<Object3d*> levelObjects;
+	LevelData* levelData = nullptr;
+	const std::filesystem::path levelJsonPath = "resources/test.json";
+	std::map<std::string, std::filesystem::file_time_type> modelWriteTimes;
 
-	// レベルデータ読み込み
-	LevelData* levelData = LoadLevelData("test");
+	auto GetWriteTime = [](const std::filesystem::path& path) {
+		std::error_code error;
+		const auto time = std::filesystem::last_write_time(path, error);
+		return error ? (std::filesystem::file_time_type::min)() : time;
+	};
 
-	// JSONのデータを元にObject3dを作る
-	for (const LevelData::ObjectData& objectData : levelData->objects) {
+	// JSONを読み直してゲーム内のレベルオブジェクトを作り直す。
+	auto ReloadLevel = [&](bool reloadModels) {
+		for (Object3d* object : levelObjects) {
+			delete object;
+		}
+		levelObjects.clear();
 
-		// file_name が空ならスキップ
-		if (objectData.fileName.empty()) {
-			continue;
+		delete levelData;
+		levelData = LoadLevelData("test");
+
+		for (const LevelData::ObjectData& objectData : levelData->objects) {
+			if (objectData.fileName.empty()) {
+				continue;
+			}
+
+			const std::filesystem::path modelPath =
+				std::filesystem::path("resources") / objectData.fileName;
+
+			if (reloadModels && ModelManager::GetInstance()->FindModel(objectData.fileName)) {
+				ModelManager::GetInstance()->ReloadModel(objectData.fileName);
+			} else {
+				ModelManager::GetInstance()->LoadModel(objectData.fileName);
+			}
+			modelWriteTimes[objectData.fileName] = GetWriteTime(modelPath);
+
+			Object3d* newObject = new Object3d();
+			newObject->Initialize(object3dCommon);
+			newObject->SetModel(objectData.fileName);
+			newObject->SetTranslate({
+				objectData.translation.x,
+				objectData.translation.y,
+				objectData.translation.z
+				});
+
+			const float degToRad = 3.14159265f / 180.0f;
+			newObject->SetRotate({
+				objectData.rotation.x * degToRad,
+				objectData.rotation.y * degToRad,
+				objectData.rotation.z * degToRad
+				});
+			newObject->SetScale({
+				objectData.scaling.x,
+				objectData.scaling.y,
+				objectData.scaling.z
+				});
+			levelObjects.push_back(newObject);
 		}
 
-		// 必要なモデルを読み込む
-		ModelManager::GetInstance()->LoadModel(objectData.fileName);
+		OutputDebugStringA("Level reloaded from Blender.\n");
+	};
 
-		Object3d* newObject = new Object3d();
-		newObject->Initialize(object3dCommon);
-		newObject->SetModel(objectData.fileName);
-
-		newObject->SetTranslate({
-			objectData.translation.x,
-			objectData.translation.y,
-			objectData.translation.z
-			});
-
-		// Blender側の回転は度数法なので、ゲーム側用にラジアンへ変換
-		const float degToRad = 3.14159265f / 180.0f;
-
-		newObject->SetRotate({
-			objectData.rotation.x * degToRad,
-			objectData.rotation.y * degToRad,
-			objectData.rotation.z * degToRad
-			});
-
-		newObject->SetScale({
-	        objectData.scaling.x,
-	        objectData.scaling.y,
-	        objectData.scaling.z
-			});
-
-		levelObjects.push_back(newObject);
-	}
+	ReloadLevel(false);
+	auto levelJsonWriteTime = GetWriteTime(levelJsonPath);
 
 	//ウィンドウの×ボタンが押されるまでループ
 	while (true) {
@@ -609,6 +632,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{
 			//入力の更新  <= ❌ 初期化時に一度だけ呼ばれている
 			input->Update();
+
+			// Blenderがtest.jsonを書き換えたら配置を自動反映する。
+			const auto newLevelJsonWriteTime = GetWriteTime(levelJsonPath);
+			if (newLevelJsonWriteTime != (std::filesystem::file_time_type::min)() &&
+				newLevelJsonWriteTime != levelJsonWriteTime) {
+				levelJsonWriteTime = newLevelJsonWriteTime;
+				ReloadLevel(true);
+			}
+
+			// OBJだけが更新された場合も、ゲームを再起動せず頂点を読み直す。
+			for (auto& [fileName, oldWriteTime] : modelWriteTimes) {
+				const auto newWriteTime =
+					GetWriteTime(std::filesystem::path("resources") / fileName);
+				if (newWriteTime != (std::filesystem::file_time_type::min)() &&
+					newWriteTime != oldWriteTime) {
+					oldWriteTime = newWriteTime;
+					ModelManager::GetInstance()->ReloadModel(fileName);
+				}
+			}
 
 			//postEffect切り替え
 			if (input->Pushkey(DIK_1)) {

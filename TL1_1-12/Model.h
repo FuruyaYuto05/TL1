@@ -57,6 +57,9 @@ public: // メンバ関数
     // Model.h
     void Initialize(ModelCommon* modelCommon, const std::string& directoryPath, const std::string& filename);
 
+    // 同じModelインスタンスを保ったままOBJを読み直す
+    void Reload(const std::string& directoryPath, const std::string& filename);
+
     void Draw();
 
 private: // メンバ関数 (Object3dから引っ越し)

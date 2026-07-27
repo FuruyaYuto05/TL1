@@ -12,6 +12,13 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directoryPat
     // モデル読み込み
     LoadObjFile(directoryPath, filename);
 
+    // Blenderの標準マテリアルには画像（map_Kd）がない場合がある。
+    // 空のパスをTextureManagerへ渡すと読み込みに失敗するため、
+    // その場合は既存のチェック柄テクスチャを使用する。
+    if (modelData_.material.textureFilePath.empty()) {
+        modelData_.material.textureFilePath = directoryPath + "/uvChecker.png";
+    }
+
     // テクスチャ読み込みと番号取得
     TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilePath);
     modelData_.material.textureIndex =
@@ -26,6 +33,23 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directoryPat
 
     std::string logIndex = "Texture Index: " + std::to_string(modelData_.material.textureIndex) + "\n";
     OutputDebugStringA(logIndex.c_str());
+}
+
+void Model::Reload(const std::string& directoryPath, const std::string& filename) {
+    // Object3dはこのModelのポインタを保持しているので、
+    // Model自体を作り直さず中の頂点バッファだけを更新する。
+    LoadObjFile(directoryPath, filename);
+    if (modelData_.material.textureFilePath.empty()) {
+        modelData_.material.textureFilePath = directoryPath + "/uvChecker.png";
+    }
+    TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilePath);
+    modelData_.material.textureIndex =
+        TextureManager::GetInstance()->GetTextureIndexByFilePath(
+            modelData_.material.textureFilePath);
+    CreateVertexData();
+
+    std::string log = "Model Reloaded: " + filename + "\n";
+    OutputDebugStringA(log.c_str());
 }
 
 void Model::CreateVertexData() {
